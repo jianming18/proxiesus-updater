@@ -41,7 +41,7 @@ def main() -> int:
         ip = item.get("ip")
         port = item.get("port")
 
-        if country == "US" and "socks5" in protocol and anonymity == "elite" and ip and port:
+        if country == "US" and "socks5" in protocol and ip and port:
             result.append(f"{ip}:{port}")
 
     result = sorted(set(result))
