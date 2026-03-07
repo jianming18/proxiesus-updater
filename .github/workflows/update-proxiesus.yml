@@ -11,6 +11,7 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,17 +21,17 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Update proxiesus.json
+      - name: Update proxies
         run: python scripts/update_proxies.py
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add proxiesus.json
+          git add proxiesus.json proxiesus.txt
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "chore: update proxiesus.json"
+          git commit -m "chore: update US socks5 proxies"
           git push
