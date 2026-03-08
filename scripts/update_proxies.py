@@ -8,41 +8,52 @@ from pathlib import Path
 from typing import Any
 
 SOURCE_URL = "https://raw.githubusercontent.com/CharlesPikachu/freeproxy/master/proxies.json"
+
 OUTPUT_JSON = Path("proxiesus.json")
 OUTPUT_TXT = Path("proxiesus.txt")
+
 TIMEOUT = 30
+
+ALLOWED_PROTOCOLS = {"http", "https", "socks5"}
 
 
 def fetch_json(url: str) -> Any:
     req = urllib.request.Request(
         url,
-        headers={
-            "User-Agent": "proxiesus-updater/1.0 (+https://github.com/)"
-        },
+        headers={"User-Agent": "proxiesus-updater/1.0"},
     )
     with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
         charset = resp.headers.get_content_charset() or "utf-8"
         return json.loads(resp.read().decode(charset))
 
 
+def normalize_protocol(value: Any) -> str:
+    return str(value or "").strip().lower()
+
+
 def main() -> int:
     payload = fetch_json(SOURCE_URL)
+
     items = payload.get("data", []) if isinstance(payload, dict) else []
 
-    result: list[str] = []
+    result = []
 
     for item in items:
         if not isinstance(item, dict):
             continue
 
-        protocol = str(item.get("protocol", "")).strip().lower()
-        country = str(item.get("country", "")).strip().upper()
-        anonymity = str(item.get("anonymity", "")).strip().lower()
+        protocol = normalize_protocol(item.get("protocol"))
         ip = item.get("ip")
         port = item.get("port")
 
-        if country == "US" and "socks5" in protocol and ip and port:
-            result.append(f"{ip}:{port}")
+        if protocol not in ALLOWED_PROTOCOLS:
+            continue
+
+        if not ip or not port:
+            continue
+
+        proxy = f"{protocol}://{ip}:{port}"
+        result.append(proxy)
 
     result = sorted(set(result))
 
@@ -50,13 +61,13 @@ def main() -> int:
         json.dumps(result, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
     OUTPUT_TXT.write_text(
         ("\n".join(result) + "\n") if result else "",
         encoding="utf-8",
     )
 
-    print(f"Updated {OUTPUT_JSON} with {len(result)} US SOCKS5 Elite proxies")
-    print(f"Updated {OUTPUT_TXT} with {len(result)} US SOCKS5 Elite proxies")
+    print(f"Total proxies: {len(result)}")
     return 0
 
 
