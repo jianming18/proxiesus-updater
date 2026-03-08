@@ -27,7 +27,7 @@ def fetch_json(url: str) -> Any:
         return json.loads(resp.read().decode(charset))
 
 
-def normalize_protocol(value: Any) -> str:
+def normalize(value: Any) -> str:
     return str(value or "").strip().lower()
 
 
@@ -42,9 +42,14 @@ def main() -> int:
         if not isinstance(item, dict):
             continue
 
-        protocol = normalize_protocol(item.get("protocol"))
+        protocol = normalize(item.get("protocol"))
+        country = normalize(item.get("country"))
+
         ip = item.get("ip")
         port = item.get("port")
+
+        if country != "us":
+            continue
 
         if protocol not in ALLOWED_PROTOCOLS:
             continue
@@ -67,7 +72,7 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    print(f"Total proxies: {len(result)}")
+    print(f"US proxies: {len(result)}")
     return 0
 
 
